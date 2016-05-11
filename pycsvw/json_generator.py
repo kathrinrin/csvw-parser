@@ -1,5 +1,3 @@
-from uritemplate import expand
-from dateutil.parser import parse
 import json
 
 
@@ -16,7 +14,7 @@ def generate_object(url, row, metadata):
     
     # quite a hack, will have to be generalized 
     if row.cells[0].about_url is not None: 
-        cellsobject['@id'] = row.cells[0].about_url
+        cellsobject['@id'] = url + row.cells[0].about_url
     
     for cell in row.cells:
         
@@ -39,46 +37,36 @@ def generate_object(url, row, metadata):
 def minimal_mode(table, metadata):
     
     documentobject = {} 
-    
     tables = []
-    
     documentobject['tables'] = tables 
-    
-    
     tableobject = {}
-    
     
     # ugly hack for test cases 
     table.url = table.url.replace('w3c.github.io', 'www.w3.org/2013')
-    
     tableobject['url'] = table.url
     
-#     try: 
-#         tableobject['dc:modified'] = list(metadata.subject_objects(URIRef('http://purl.org/dc/terms/modified')))[0][1] 
-#         tableobject['dc:license'] = list(metadata.subject_objects(URIRef('http://purl.org/dc/terms/license')))[0][1] 
-#         tableobject['dc:title'] = list(metadata.subject_objects(URIRef('http://purl.org/dc/terms/title')))[0][1] 
-#         
-#         
-#         keylist = list(metadata.subject_objects(URIRef('http://www.w3.org/ns/dcat#keyword')))
-#         keywords = []
-#         for (s, keyword) in keylist:
-#             keywords.append(str(keyword))
-# 
-#         tableobject['dcat:keyword'] = keywords
-#         
-#         
-#         publisherobject = {}
-#         PNode = list(metadata.subject_objects(URIRef('http://purl.org/dc/terms/publisher')))[0][1] 
-#         url = metadata.value(subject=PNode, predicate=URIRef('http://schema.org/url'))
-#         publisherobject['schema:url'] = url[:-1]  # json-ld parser adds trailing slash!? 
-#         name = metadata.value(subject=PNode, predicate=URIRef('http://schema.org/name'))
-#         publisherobject['schema:name'] = name 
-#         tableobject['dc:publisher'] = publisherobject
-#         
-# 
-#     except: 
-#         pass 
+    if 'dc:modified' in metadata: 
+        tableobject['dc:modified'] = metadata['dc:modified']['@value']
         
+    if 'dc:license' in metadata: 
+        tableobject['dc:license'] = metadata['dc:license']['@id']
+        
+    if 'dc:title' in metadata: 
+        tableobject['dc:title'] = metadata['dc:title']['@value']
+    
+    if 'dc:publisher' in metadata: 
+        publisherobject = {}
+        publisherobject['schema:url'] = metadata['dc:publisher']['schema:url']['@id']
+        publisherobject['schema:name'] = metadata['dc:publisher']['schema:name']['@value']
+        tableobject['dc:publisher'] = publisherobject
+    
+    if 'dcat:keyword' in metadata: 
+        metakeywords = metadata['dcat:keyword']
+        keywords = []
+        for keyword in metakeywords: 
+            keywords.append(keyword['@value'])
+        tableobject['dcat:keyword'] = keywords
+
     tables.append(tableobject)
     
 

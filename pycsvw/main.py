@@ -5,6 +5,7 @@ import csv_parser
 import metadata
 import json_generator
 import metadata_extractor
+import annotator 
 
 
 __author__ = 'sebastian'
@@ -45,13 +46,24 @@ class CSVW:
         # Retrieve the tabular data file.
         self.table, embedded_metadata = csv_parser.parse(handle, url)
 
+
+    
+
+            
+            
+            
         # TODO create settings using arguments or provided metadata
         sources = metadata_extractor.metadata_extraction(url, metadata_handle, embedded_metadata=embedded_metadata)
         self.metadata = metadata.merge(sources)
+        
+        self.table, self.metadata = annotator.annotate_table(self.table, self.metadata)
+
 
     def to_rdf(self):
         pass
 
     def to_json(self):
         # TODO group of tables?
-        json_generator.minimal_mode(self.table, self.metadata.json()['tables'][0])
+        json = json_generator.minimal_mode(self.table, self.metadata.json()['tables'][0])
+        return json 
+    

@@ -23,11 +23,23 @@ def get_manifest():
     return json.loads(response.read())
 
 
+# http://stackoverflow.com/questions/25851183/how-to-compare-two-json-objects-with-the-same-elements-in-a-different-order-equa
+def ordered(obj):
+    if isinstance(obj, dict):
+        return sorted((k, ordered(v)) for k, v in obj.items())
+    if isinstance(obj, list):
+        return sorted(ordered(x) for x in obj)
+    else:
+        return obj
+    
 class CSVWJSONTestCases(unittest.TestCase):
         pass
 
 
 def test_generator(csv_file, result_url, implicit, type, option):
+    
+    name = csv_file.split("/")[-1][:-4] 
+    
     def test(self):
         metadata = None
         if 'metadata' in option:
@@ -52,9 +64,22 @@ def test_generator(csv_file, result_url, implicit, type, option):
 
         # test the json result
 
+        # test the json result
+
         resp = urllib2.urlopen(result_url)
         result = json.loads(resp.read())
-        self.assertEqual(csvw.to_json(), result)
+        
+        generated_result = json.loads(csvw.to_json())
+        
+        with open('output_json/' + name + '.json', 'w') as outfile:
+            json.dump(result, outfile, indent=2)
+            
+        with open('output_json/generated_' + name + '.json', 'w') as outfile:
+            json.dump(generated_result, outfile, indent=2)
+
+        
+        self.assertEqual(ordered(generated_result), ordered(result))
+    
 
     return test
 
